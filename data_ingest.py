@@ -7,10 +7,11 @@ conn = db.connection()
 URI = 'wss://ws-feed.exchange.coinbase.com'
 
 channel = 'matches'
+db_collection = 'CoinbaseMatches'
 
 product_ids = ['XLM-USD']
-# product_ids += ['BTC-USD']
-# product_ids += ['ETH-USD']
+product_ids += ['BTC-USD']
+product_ids += ['ETH-USD']
 
 
 def convert_iso_8601_time(json_response):
@@ -24,7 +25,7 @@ def convert_iso_8601_time(json_response):
 def write_match_to_database(json_response):
     """ No need to change the json except for the time before writing it to DB """
     convert_iso_8601_time(json_response)
-    collection = conn[json_response['product_id']]
+    collection = conn[db_collection]
     collection.insert_one(json_response)
 
 
