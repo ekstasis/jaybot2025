@@ -18,13 +18,11 @@ if __name__ == '__main__':
     client = MongoClient('mongodb://localhost:27017')  # Replace with your MongoDB connection string
     db = client['your_database']  # Replace with your database name
 
-    product = 'ETH-USD'
 
-    now = datetime.fromisoformat("2024-12-24T20:43:24.659+00:00")
+    product = 'XLM-USD'
+
+    now = datetime.now(tz=timezone.utc)
     duration =  timedelta(minutes=1)
-
-
-    # Calculate the boundaries of the previous minute
     end = now.replace(second=0, microsecond=0)
     start = end - duration
 
