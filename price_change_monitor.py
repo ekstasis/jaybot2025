@@ -1,14 +1,15 @@
 import time
 from datetime import datetime, timedelta, timezone
 
-from mongodb import jaybot_db
+from mongodb import get_database
 
-test_collection = jaybot_db()['jb_test']
+collection_name = 'CoinbaseMatches'
+# collection_name = 'jb_test'
 
 
 def print_price_change(collection):
-    """Prints the % change in price over the last minute for each product """
-
+    """Prints the % change in price over the last minute for each product
+    """
     # Calculate edges of previous minute
     now = datetime.now(tz=timezone.utc)
     end_time = now.replace(second=0, microsecond=0)  # Start of the current minute
@@ -18,7 +19,7 @@ def print_price_change(collection):
     pipeline = [
         {"$match": {"time": {"$gte": start_time, "$lt": end_time}}},
         {"$sort": {"time": 1}},
-        {"$group": {
+        {"$group": {  # returns one document for each product
             "_id": "$product_id",
             "first_price": {"$first": "$price"},
             "last_price": {"$last": "$price"},
@@ -37,7 +38,9 @@ def print_price_change(collection):
         }}
     ]
 
-    print('=====================================')
+    start_str = start_time.strftime('%H:%M')
+    end_str = end_time.strftime('%H:%M')
+    print(f'\n=== {start_str} -> {end_str} ===')
     price_changes_per_product = list(collection.aggregate(pipeline))
     if not price_changes_per_product:
         print("No Trades")
@@ -45,15 +48,16 @@ def print_price_change(collection):
 
     for product in price_changes_per_product:
         dec_chg = product['chg_pct'].to_decimal()
-        shrt_end = end_time.strftime('%H:%M')
-        print(f"{shrt_end} | {product['_id']} 1-minute price change:  {float(dec_chg):.2f}%")
+        print(f"{product['_id']} 1-minute price change:  {float(dec_chg):.2f}%")
 
 
-while True:
-    try:
-        print_price_change(test_collection)
+if __name__ == '__main__':
+    """
+    Every 60 seconds, report previous minute's price change for each product
+    """
+    trades = get_database('jaybot')[collection_name]
 
-        # Sleep briefly before checking again
-        time.sleep(60)  # Adjust interval as needed
-    except Exception as e:
-        print(f"Error: {e}")
+    print(f'\n\nUsing collection: \"{collection_name}\"')
+    while True:
+        print_price_change(trades)
+        time.sleep(60)

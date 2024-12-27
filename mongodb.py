@@ -11,7 +11,7 @@ def connection():
     return collection
 
 
-def jaybot_db():
+def get_database(db_name):
     client = MongoClient('mongodb://%s:%s@137.184.72.86:27052/' % (username, password))
-    return client['jaybot']
+    return client[db_name]
 

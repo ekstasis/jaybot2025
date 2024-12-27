@@ -85,7 +85,7 @@ if __name__ == '__main__':
     print(f'\nWill being WRITING to collection: \"{collection_name}\" in {delay} seconds...\n')
     time.sleep(delay)
 
-    print_times = False
+    print_times = True
 
     try:
         asyncio.run(websocket_listener())

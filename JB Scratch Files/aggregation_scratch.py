@@ -1,8 +1,8 @@
-from mongodb import database
+from mongodb import get_database
 from datetime import datetime
 
 
-test_collection = database()['jb_test']
+test_collection = get_database()['jb_test']
 
 start_time = datetime.fromisoformat("2024-12-26T21:45:00.000+00:00")
 end_time = datetime.fromisoformat("2024-12-26T21:46:00.000+00:00")
