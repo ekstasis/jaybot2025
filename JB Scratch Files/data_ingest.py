@@ -1,18 +1,13 @@
-import asyncio
-import json
-import websockets
+import asyncio, json, websockets
 from datetime import datetime
-from bson.decimal128 import Decimal128
-from mongodb import jaybot_db
+import mongodb as db
 
-""" Reference for "match" JSON: 
-        https://docs.cdp.coinbase.com/exchange/docs/websocket-channels#match  
-"""
+conn = db.connection()
 
 URI = 'wss://ws-feed.exchange.coinbase.com'
-channel = 'matches'
 
-db_collection = jaybot_db()['jb_test']
+channel = 'trades'
+db_collection = 'CoinbaseMatches'
 
 product_ids = ['XLM-USD']
 product_ids += ['BTC-USD']
@@ -27,29 +22,18 @@ def convert_iso_8601_time(json_response):
     json_response['time'] = python_time
 
 
-def prepare_match(match):
-    """ Change text fields to data/numeric so mongodb can operate on them """
-    # date
-    iso_8601_time_string = match['time']
-    python_time = datetime.fromisoformat(iso_8601_time_string.replace('Z', '+00:00'))
-    match['time'] = python_time
-
-    # price & size
-    match['size'] = Decimal128(match['size'])
-    match['price'] = Decimal128(match['price'])
+def write_match_to_database(json_response):
+    """ No need to change the json except for the time before writing it to DB """
+    convert_iso_8601_time(json_response)
+    collection = conn[db_collection]
+    collection.insert_one(json_response)
 
 
-def write_match_to_database(match):
-    prepare_match(match)
-    db_collection.insert_one(match)
-    print(match['time'])
-
-
-def process_response(response):
-    if response['type'] == 'match':
-        write_match_to_database(response)
+def process_response(json_response):
+    if json_response['type'] == 'match':
+        write_match_to_database(json_response)
     else:
-        print(response)  # Will at least display the subscription method before writing matches to DB
+        print(json_response)  # Will at least display the subscription method before writing trades to DB
 
 
 async def websocket_listener():
@@ -64,7 +48,8 @@ async def websocket_listener():
                 await websocket.send(subscribe_message)
                 while True:
                     response = await websocket.recv()
-                    process_response(json.loads(response))
+                    json_response = json.loads(response)
+                    process_response(json_response)
         except (websockets.exceptions.ConnectionClosedError, websockets.exceptions.ConnectionClosedOK):
             print('Connection closed, retrying..')
             await asyncio.sleep(1)
