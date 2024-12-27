@@ -9,3 +9,9 @@ def connection():
     client = MongoClient('mongodb://%s:%s@137.184.72.86:27052/' % (username, password))
     collection = client.jaybot
     return collection
+
+
+def jaybot_db():
+    client = MongoClient('mongodb://%s:%s@137.184.72.86:27052/' % (username, password))
+    return client['jaybot']
+
