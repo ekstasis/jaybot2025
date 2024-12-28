@@ -1,19 +1,18 @@
 import time
 from datetime import datetime, timedelta, timezone
+import schedule
 
 from mongodb import get_database
-
-collection_name = 'CoinbaseMatches'
-# collection_name = 'jb_test'
+from config import collection_name
 
 
-def print_price_change(collection):
+def print_price_change(collection: dict, interval: timedelta):
     """Prints the % change in price over the last minute for each product
     """
     # Calculate edges of previous minute
     now = datetime.now(tz=timezone.utc)
-    end_time = now.replace(second=0, microsecond=0)  # Start of the current minute
-    start_time = end_time - timedelta(minutes=1)  # Start of the previous minute
+    end_time = now.replace(second=0, microsecond=0)
+    start_time = end_time - interval
 
     # filter, sort, group, calculate
     pipeline = [
@@ -57,7 +56,21 @@ if __name__ == '__main__':
     """
     trades = get_database('jaybot')[collection_name]
 
+    one_minute = timedelta(minutes=1)
+    one_hour = timedelta(hours=1)
+
+    # schedule.every().minute.do(print_price_change, collection=trades, interval=one_minute)
+    schedule.every().hour.do(print_price_change, collection=trades, interval=one_hour)
+
     print(f'\n\nUsing collection: \"{collection_name}\"')
+    seconds_till = schedule.idle_seconds()
+    if seconds_till < 60: # ?  f'{seconds_till:0f}' : f'{seconds_till / 60:1f}'
+        print(f"Next job in {seconds_till:.0f} seconds")
+    else:
+        print(f"Next job in {seconds_till / 60:.1f} minutes")
+
+    print(schedule.next_run())
+
     while True:
-        print_price_change(trades)
+        schedule.run_pending()
         time.sleep(60)
