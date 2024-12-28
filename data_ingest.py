@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 from bson.decimal128 import Decimal128
 from mongodb import get_database
+import config
 
 """ Reference for "match" JSON: 
     https://docs.cdp.coinbase.com/exchange/docs/websocket-channels#match  
@@ -14,10 +15,7 @@ from mongodb import get_database
 URI = 'wss://ws-feed.exchange.coinbase.com'
 channel = 'matches'
 
-collection_name = 'CoinbaseMatches'
-# collection_name = 'jb_test'
-
-db_collection = get_database('jaybot')[collection_name]
+db_collection = get_database('jaybot')[config.collection_name]
 
 product_ids = ['XLM-USD']
 product_ids += ['BTC-USD']
@@ -82,7 +80,7 @@ async def websocket_listener():
 if __name__ == '__main__':
 
     delay = 5
-    print(f'\nWill being WRITING to collection: \"{collection_name}\" in {delay} seconds...\n')
+    print(f'\nWill being WRITING to collection: \"{config.collection_name}\" in {delay} seconds...\n')
     time.sleep(delay)
 
     print_times = True
