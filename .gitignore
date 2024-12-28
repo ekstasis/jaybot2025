@@ -1,5 +1,6 @@
+config.py
+
+# Baxter-specific:
 .idea/
 __pycache__/
-
 JB Scratch Files/
-config.py
