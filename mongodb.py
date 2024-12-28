@@ -1,5 +1,8 @@
+import pymongo
 from pymongo import MongoClient
 import urllib.parse
+
+from pymongo.synchronous.database import Database
 
 username = urllib.parse.quote_plus("AdminBaxter")
 password = urllib.parse.quote_plus("jaybot123")
@@ -11,7 +14,8 @@ def connection():
     return collection
 
 
-def get_database(db_name):
+def get_database(db_name: str) -> Database:
     client = MongoClient('mongodb://%s:%s@137.184.72.86:27052/' % (username, password))
-    return client[db_name]
+    db = client.get_database(db_name)
+    return db
 
