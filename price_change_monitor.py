@@ -26,7 +26,7 @@ def print_price_change(collection: Collection, interval: timedelta, product: str
     pipeline = [
         {"$match": match},
         {"$sort": {"time": 1}},
-        {"$group": {  # returns one document for each product
+        {"$group": {      # returns one document for each product
             "_id": "$product_id",
             "first_price": {"$first": "$price"},
             "last_price": {"$last": "$price"},
@@ -47,19 +47,20 @@ def print_price_change(collection: Collection, interval: timedelta, product: str
 
     start_str = start_time.strftime('%H:%M')
     end_str = end_time.strftime('%H:%M')
-    print(f'{start_str} -> {end_str}\n==============')
+
+    report_string = f'{start_str} -> {end_str}\n==============\n'
+
     price_changes_per_product = list(collection.aggregate(pipeline))
 
     if not price_changes_per_product:
-        print("NO TRADES\n")
-        return
+        report_string += "NO TRADES\n"
 
-    for product in price_changes_per_product:
-        dec_chg = product['chg_pct'].to_decimal()
-        print(f"{product['_id']}:  {float(dec_chg):.2f}%")
+    else:
+        for product in price_changes_per_product:
+            dec_chg = product['chg_pct'].to_decimal()
+            report_string += f"{product['_id']}:  {float(dec_chg):.2f}%\n"
 
-    print()
-    return
+    print(report_string)
 
 
 def minutely_report(collection: Collection, product: str = None):
@@ -80,7 +81,7 @@ if __name__ == '__main__':
 
     print(f'\nUsing collection: \"{config.collection_name}\"\n')
 
-    print("Test run before we begin:\n")
+    print("Test run before we begin:\n")  # quick check that there's some trade data
     minutely_report(trades, product='XLM-USD')
 
     scheduler = BlockingScheduler()
