@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
+import time
 
 from apscheduler.schedulers.background import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -27,8 +28,8 @@ def print_price_change(collection: Collection, interval: timedelta, product: str
         {"$match": match},
         {"$sort": {"time": 1}},
         {"$group": {      # returns one document for each product
-            "_id": "$product_id",
             "first_price": {"$first": "$price"},
+            "_id": "$product_id",
             "last_price": {"$last": "$price"},
         }},
         {"$addFields": {
@@ -71,8 +72,7 @@ def hourly_report(collection: Collection, product: str = None):
     print_price_change(collection=collection, interval=timedelta(hours=1), product=product)
 
 
-if __name__ == '__main__':
-
+def test():
     logging.basicConfig()
     logging.getLogger('apscheduler').setLevel(logging.WARNING)
 
@@ -89,4 +89,13 @@ if __name__ == '__main__':
     scheduler.add_job(hourly_report, CronTrigger(minute="0"), args=[trades])
     scheduler.print_jobs()
     print()
-    scheduler.start()
+
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        scheduler.shutdown()
+        print("Scheduler stopped")
+
+
+if __name__ == '__main__':
+    test()
