@@ -24,14 +24,6 @@ product_ids += ['ETH-USD']
 print_times = True  # print the timestamp of each trade written to console
 
 
-def convert_iso_8601_time(json_response):
-    """ Replaces the time string from Coinbase with a python datetime object.
-        This is required by MongoDB Time Series """
-    iso_8601_time_string = json_response['time']
-    python_time = datetime.fromisoformat(iso_8601_time_string.replace('Z', '+00:00'))
-    json_response['time'] = python_time
-
-
 def prepare_match(match):
     """ Change text fields to data/numeric so mongodb can operate on them """
     # date
