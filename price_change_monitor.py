@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta, timezone
-import time
 
 from apscheduler.schedulers.background import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -11,9 +10,10 @@ from mongodb import get_database
 
 
 def print_price_change(collection: Collection, interval: timedelta, product: str = None):
-    """Prints the % change in price over the last minute for each product
+    """Prints the % change in price during the specified time interval
+        If no product is provided, results will be given for all products
     """
-    # Calculate edges of previous minute
+    # Calculate edges of time interval
     now = datetime.now(tz=timezone.utc)
     end_time = now.replace(second=0, microsecond=0)
     start_time = end_time - interval
@@ -46,20 +46,19 @@ def print_price_change(collection: Collection, interval: timedelta, product: str
         }}
     ]
 
+    # list of results from mongoDB aggregation
+    results = list(collection.aggregate(pipeline))
+
     start_str = start_time.strftime('%H:%M')
     end_str = end_time.strftime('%H:%M')
-
     report_string = f'{start_str} -> {end_str}\n==============\n'
 
-    price_changes_per_product = list(collection.aggregate(pipeline))
-
-    if not price_changes_per_product:
+    if not results:
         report_string += "NO TRADES\n"
-
     else:
-        for product in price_changes_per_product:
-            dec_chg = product['chg_pct'].to_decimal()
-            report_string += f"{product['_id']}:  {float(dec_chg):.2f}%\n"
+        for result in results:
+            dec_chg = result['chg_pct'].to_decimal()
+            report_string += f"{result['_id']}:  {float(dec_chg):.2f}%\n"
 
     print(report_string)
 
